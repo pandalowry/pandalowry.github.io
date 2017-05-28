@@ -16,7 +16,7 @@
 title: Юрий Изотов - персональный сайт
 email: bestlowry@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
-  Страстный Ruby on Rails developer из Екатеринбурга, Россия
+  Ruby on Rails developer из Екатеринбурга, Россия
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
