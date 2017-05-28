@@ -13,10 +13,10 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Yury Izotov's personal site
+title: Юрий Изотов - персональный сайт
 email: bestlowry@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
-  Passionate Ruby on Rails developer from Yekaterinburg, Russia
+  Страстный Ruby on Rails developer из Екатеринбурга, Россия
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
