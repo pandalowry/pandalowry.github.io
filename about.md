@@ -4,12 +4,11 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+Это технический блог и по совместительству моя персональная страничка. В ней указана информация как со мной связаться,
+возможно будет и портфолио, хотя многие проекты какие я разрабатываю на Ruby on Rails связаны NDA условиями.
 
-You can find the source code for the Jekyll new theme at:
-{% include icon-github.html username="jekyll" %} /
-[minima](https://github.com/jekyll/minima)
+Я оказываю услуги разработки как малому, так и среднему бизнесу. И не обхожу вниманием крупные задачи, если таковые возникают.
+Чаще всего такая работа проводится временным наймом меня в штат компании, хотя условия всегда обговариваются индивидуально.
 
-You can find the source code for Jekyll at
-{% include icon-github.html username="jekyll" %} /
-[jekyll](https://github.com/jekyll/jekyll)
+В добавок, я буду отражать в блоге некие малые сниппеты, рецепты по ROR какие "лень было гуглить" или вычитывать на stackoverflow. 
+Буду рад, если какие-то из них будут Вам полезны.
