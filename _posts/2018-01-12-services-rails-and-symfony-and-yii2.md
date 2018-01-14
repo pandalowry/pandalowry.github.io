@@ -1,8 +1,8 @@
 ---
 layout: post
-title: 'Сервисы: Rails и Symfony'
+title: 'Сервисы в Rails, Symfony и Yii2: реализуем одну задачу на трех фреймворках'
 date: 2018-01-12 12:14 +0500
-permalink: /services-rails-and-symfony/
+permalink: /services-rails-and-symfony-and-yii2/
 ---
 Долгое время муссировалась и&nbsp;продолжает муссироваться в&nbsp;кругах разных каркасов идея сервисов. Во&nbsp;многих фреймворках сервисы стали самостоятельными единицами кода (как скажем, в&nbsp;Symfony о&nbsp;чем мы&nbsp;еще поговорим). В&nbsp;Rails&nbsp;же паттерн Service Object выглядит очень просто, так как никаких &laquo;самостоятельных единиц&raquo; именуемых сервисами, в&nbsp;нем нет.
 
@@ -123,7 +123,7 @@ bin/console cache:clear --env=prod
 
 ![Список книг локальной ФС с сервисом на Symfony](https://habrastorage.org/webt/fp/m8/pa/fpm8pas0bsrcqosmvzvoomvtryo.png){:class="img-responsive"}
 
-### Делаем это же на Ruby on Rails
+### Делаем это на Ruby on Rails
 
 Уфф, тут кода будет меньше, и&nbsp;телодвижений тоже. Но&nbsp;это не&nbsp;значит что Symfony чем-то хуже или что он&nbsp;громоздок. Концепция сервисов как практикуемых единиц очень полезна и&nbsp;хороша. В&nbsp;Rails&nbsp;же мы&nbsp;начнем с&nbsp;простого. Сначала создадим само приложение:
 
@@ -196,6 +196,204 @@ rails s
 
 Подведя итоги, скажу что оба каркаса хоть я&nbsp;и&nbsp;за&nbsp;ROR, прекрасно справляются с&nbsp;задачей, просто каждый своим путем. В&nbsp;Symfony можно тоже сделать сервис гибким, чтобы передавать в&nbsp;него параметр при вызове каждый раз но&nbsp;это я&nbsp;оставил &laquo;за&nbsp;кулисами&raquo; статьи, предпочтя автосвязывание аргументов из&nbsp;файла настроек.
 
+### Делаем это Yii2
+
+Так как я общаюсь и уважаю многих разработчиков на фреймворке Yii2, камрад [lavros][lavros-home] любезно написал гайд как сделать задачу на yii2. И это оказалось очень интересным, так как он показал сильные стороны фреймворка, например генерация кода консольным gii но об этом ниже. Вот этот гайд, передаю слово автору.
+
+Сделаем тоже самое на [Yii2][yii2-home]. Создадим контроллер, действие и представление. Реализуем сервис по получению списка файлов из указанной директории. Внедрим сервис-объект через конструктор в контроллер, получим данные в действии контроллера и отразим в представлении.
+
+Итак, поехали!
+
+В качестве шаблона приложения воспользуемся [yii2-app-basic][yii2-basic].
+
+Развернём шаблон yii2-app-basic с помощью [composer][composer]:
+
+{% highlight bash %}
+composer create-project --prefer-dist yiisoft/yii2-app-basic books.local
+{% endhighlight %} 
+
+Приложение развернули. Создадим контроллер, действие и представление для будущей страницы. В Yii2 есть инструмент для генерации кода — [Gii][gii]. Имеется web версия и консольная, мы воспользуемся консольной.
+
+Для этого перейдём в каталог с приложением и выполним команду:
+
+{% highlight bash %}
+cd books.local
+./yii gii/controller --controllerClass="app\controllers\BookController" --actions=list
+{% endhighlight %} 
+
+Результатом работы команды будет:
+
+{% highlight bash %}
+Running 'Controller Generator'...
+
+
+
+The following files will be generated:
+[new] controllers/BookController.php
+[new] views/book/list.php
+
+
+Ready to generate the selected files? (yes|no) [yes]:y
+
+
+Files were generated successfully!
+Generating code using template "/path/to/books.local/vendor/yiisoft/yii2-gii/generators/controller/default"...
+generated controllers/BookController.php
+generated views/book/list.php
+done!
+{% endhighlight %} 
+
+Страницы создали. Запустим приложение чтобы посмотреть на страницу:
+
+{% highlight bash %}
+./yii serve
+{% endhighlight %} 
+
+Откроем браузер по адресу: http://localhost:8080?r=book/list, на странице увидим:
+
+![Созданная нами страница в Yii2](https://habrastorage.org/webt/gn/fc/fp/gnfcfpkocibb3nt-klqksaqi5uq.png){:class="img-responsive"}
+
+Хорошо, страница есть. Теперь реализуем сервис-объект для получения списка файлов. Создадим каталог для сервисов — services, в нём файл DirectoryListerService.php:
+
+{% highlight bash %}
+mkdir services && cd services && touch DirectoryListerService.php
+{% endhighlight %} 
+
+Реализуем метод getFileList() для получения списка файлов. В Yii2 есть помощник по работе с файлами — [FileHelper][yii2filehelper]. Воспользуемся FileHelper для получения файлов в указанной директории.
+
+Отредактируем файл DirectoryListerService.php:
+
+{% highlight php %}
+<?php
+
+namespace app\services;
+
+use yii\helpers\FileHelper;
+
+class DirectoryListerService
+{
+    private $path;
+    private $fileHelper;
+    
+    public function __construct($path)
+    {
+        $this->path = $path;
+    }
+    
+    public function getFileList()
+    {
+    return FileHelper::findFiles($this->path, ['recursive' => false]);
+    }
+}
+{% endhighlight %} 
+
+Сервис-объект реализован, подключим его в нашем контроллере controllers/BookController.php. Можно подключить явно, создав в методе actionList() экземпляр класса app\services\DirectoryListerService, но мы пойдём другим путём — воспользуемся [внедрением зависимости через конструктор][yii2diconstructor]:
+
+Для начала настроим [контейнер зависимостей][yii2dicontainer] в конфигурации приложения, отредактируем config/web.php:
+
+{% highlight php %}
+<?php
+//...
+$config = [
+  //  ...
+    'container' => [
+        'singletons' => [
+            'app\services\DirectoryListerService' => [
+                ['class' => 'app\services\DirectoryListerService'],
+                ['/home/izotoff/Документы/Шахматы'],
+            ],
+        ],
+    ],
+  //  ...
+];
+{% endhighlight %} 
+
+Объект описали как singleton, то есть, где бы мы не внедряли наш сервис-объект, экземляр будет создаваться один раз.
+
+Внедрим в конструкторе contorllers\BookController.php:
+
+{% highlight php %}
+<?php
+
+namespace app\controllers;
+
+use app\services\DirectoryListerService;
+
+class BookController extends \yii\web\Controller
+{
+    protected $directoryListerService;
+
+    public function __construct($id, $module, DirectoryListerService $directoryListerService, $config = [])
+    {
+        $this->directoryListerService = $directoryListerService;
+        parent::__construct($id, $module, $config);
+    }
+
+ //   ...
+}
+{% endhighlight %} 
+
+Теперь при создании контроллера сервис DirectoryListerService будет создаваться автоматически.
+
+Отредактируем метод BookController::actionList(), получим список файлов, посчитаем количество найденых файлов и передадим в представление:
+
+{% highlight php %}
+<?php
+
+//...
+
+class BookController extends \yii\web\Controller
+{
+    //...
+    
+    public function actionList()
+    {
+        $files = $this->directoryListerService->getFileList();
+        $numFiles = count($files);
+        
+        return $this->render('list', [
+            'files' => $files,
+            'numFiles' => $numFiles
+        ]);
+    }
+}
+{% endhighlight %} 
+
+Оформим представление действия views/book/list.php:
+
+{% highlight php %}
+<?php
+
+use yii\helpers\Html;
+
+/* @var $this yii\web\View */
+?>
+<h1>Книги (<?= $numFiles ?>)</h1>
+
+<ol>
+<?php foreach ($files as $file): ?>
+    <li><?= Html::a(basename($file), "file://{$file}") ?></li>
+<?php endforeach ?>
+</ol>
+{% endhighlight %} 
+
+Готово. Обновляем страницу в браузере, смотрим результат. 
+
+Он будет таким же, как и в предыдущих примерах, только снабжен yii2 debug toolbar. Похожее мы видели в скриншоте для symfony - там тоже оставлен был тулбар для отладки.
+
+В целом, мне очень понравился подход yii2 и это было действительно не сложно и не долго, при условии что это делает знакомый с документацией и возможностями yii2 человек. 
+
+Спасибо [lavros][lavros-home] за важный гайд! Уверен, некоторых это даже подстегнет изучать Yii2.
+
 [directory-iterator]: http://php.net/manual/ru/class.directoryiterator.php
 [symfony-screen]: https://habrastorage.org/webt/fp/m8/pa/fpm8pas0bsrcqosmvzvoomvtryo.png
 [rails-screen]: https://habrastorage.org/webt/fl/kk/1i/flkk1ir-3vlqg1e6a6vxiphhcws.png
+[lavros-home]: https://github.com/lavros
+[yii2-home]: http://www.yiiframework.com/doc-2.0/guide-intro-yii.html
+[yii2-basic]: https://github.com/yiisoft/yii2-app-basic
+[composer]: https://getcomposer.org/
+[gii]: http://www.yiiframework.com/doc-2.0/guide-start-gii.html
+[booklist-picture]: https://habrastorage.org/webt/gn/fc/fp/gnfcfpkocibb3nt-klqksaqi5uq.png
+[yii2filehelper]: http://www.yiiframework.com/doc-2.0/yii-helpers-filehelper.html
+[yii2diconstructor]: http://www.yiiframework.com/doc-2.0/guide-concept-di-container.html#constructor-injection
+[yii2dicontainer]: http://www.yiiframework.com/doc-2.0/guide-concept-di-container.html
