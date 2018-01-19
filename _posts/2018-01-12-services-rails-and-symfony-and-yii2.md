@@ -389,7 +389,7 @@ use yii\helpers\Html;
 
 Камрад [Ми}{алы4][rusty] любезно продолжил нашу традицию и во мгновение ока написал гайд как сделать это же на Zend Expressive. Передаю слово ему.
 
-Для решения задачи по отображению списка книг из директории используется [Zend Expressive](https://docs.zendframework.com/zend-expressive/) с модульной структорой, Zend ServiceManager, FastRoute, Twig, Whoops. Все эти пакеты можно выбрать на этапе создания нового проекта, когда вы даете команду
+Для решения задачи по отображению списка книг из директории используется [Zend Expressive](https://docs.zendframework.com/zend-expressive/) с модульной структорой, Zend ServiceManager, FastRoute, Twig, Whoops. Все эти пакеты можно выбрать на этапе создания нового проекта, когда вы выполняете команду
 
 {% highlight bash %}
 composer create-project zendframework/zend-expressive-skeleton expressive
