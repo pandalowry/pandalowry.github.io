@@ -399,7 +399,6 @@ Zend Expressive):**
 
 {% highlight php %}
 <?php
-// src/App/src/Service/BookService.php
 
 namespace App\Service;
 
@@ -413,10 +412,11 @@ class BookService
             return [];
         }
 
-        $directoryIteratorInstance = new DirectoryIterator($path);
-        foreach ($directoryIteratorInstance as $fileNode) {
-            if ($fileNode->isFile()) {
-                $files[] = $fileNode->getFilename();
+        $dir = new DirectoryIterator($path);
+
+        foreach ($dir as $item) {
+            if ($item->isFile()) {
+                $files[] = $item->getFilename();
             }
         }
 
