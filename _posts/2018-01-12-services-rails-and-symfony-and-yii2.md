@@ -243,7 +243,7 @@ generated views/book/list.php
 done!
 {% endhighlight %} 
 
-Страницы создали. Запустим приложение чтобы посмотреть на&nbsp;страницу:
+Страницу создали. Запустим приложение чтобы посмотреть на&nbsp;страницу:
 
 {% highlight bash %}
 ./yii serve
@@ -273,7 +273,6 @@ use yii\helpers\FileHelper;
 class DirectoryListerService
 {
     private $path;
-    private $fileHelper;
     
     public function __construct($path)
     {
