@@ -349,6 +349,7 @@ class BookController extends \yii\web\Controller
     {
         $files = $this->directoryListerService->getFileList();
         $numFiles = count($files);
+        sort($files);
         
         return $this->render('list', [
             'files' => $files,
