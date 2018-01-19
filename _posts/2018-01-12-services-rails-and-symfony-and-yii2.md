@@ -1,8 +1,8 @@
 ---
 layout: post
-title: 'Сервисы в Rails, Symfony и Yii2: реализуем одну задачу на трех фреймворках'
+title: 'Сервисы в Rails, Symfony, Yii2 и Zend Expressive: реализуем одну задачу на четырех фреймворках'
 date: 2018-01-12 12:14 +0500
-permalink: /services-rails-and-symfony-and-yii2/
+permalink: /services-rails-and-symfony-and-yii2-and-zend/
 ---
 Долгое время муссировалась и&nbsp;продолжает муссироваться в&nbsp;кругах разных каркасов идея сервисов. Во&nbsp;многих фреймворках сервисы стали самостоятельными единицами кода (как скажем, в&nbsp;Symfony о&nbsp;чем мы&nbsp;еще поговорим). В&nbsp;Rails&nbsp;же паттерн Service Object выглядит очень просто, так как никаких &laquo;самостоятельных единиц&raquo; именуемых сервисами, в&nbsp;нем нет.
 
@@ -385,6 +385,162 @@ use yii\helpers\Html;
 
 Спасибо [lavros][lavros-home] за&nbsp;важный гайд! Уверен, некоторых это даже подстегнет изучать Yii2.
 
+### Список книг на Zend Expressive
+
+Камрад [Ми}{алы4][rusty] любезно продолжил нашу традицию и во мгновение ока написал гайд как сделать это же на Zend Expressive. Передаю слово ему.
+
+Для решения задачи по отображению списка книг из директории используется [Zend Expressive](https://docs.zendframework.com/zend-expressive/) с модульной структорой, Zend ServiceManager, FastRoute, Twig, Whoops. Все эти пакеты можно выбрать на этапе создания нового проекта, когда вы даете команду
+
+{% highlight bash %}
+composer create-project zendframework/zend-expressive-skeleton expressive
+{% endhighlight %}
+
+**Создадим сервис в модуле App (модуль App создается по умолчанию после создания пустого проекта
+Zend Expressive):**
+
+{% highlight php %}
+<?php
+// src/App/src/Service/BookService.php
+
+namespace App\Service;
+
+use DirectoryIterator;
+
+class BookService
+{
+    public function getList(string $path): array
+    {
+        if (!is_dir($path)) {
+            return [];
+        }
+
+        $directoryIteratorInstance = new DirectoryIterator($path);
+        foreach ($directoryIteratorInstance as $fileNode) {
+            if ($fileNode->isFile()) {
+                $files[] = $fileNode->getFilename();
+            }
+        }
+
+        sort($files);
+
+        return $files;
+    }
+}
+{% endhighlight %}
+
+**Зарегистрируем наш сервис:**
+
+{% highlight php %}
+<?php
+// src/App/src/ConfigProvider.php
+
+public function getDependencies()
+{
+    return [
+        ...
+    
+        'factories'  => [
+            ...
+            
+            Service\BookService::class => \Zend\ServiceManager\Factory\InvokableFactory::class,
+            
+            ...
+        ],
+        
+        ...
+    ];
+}
+{% endhighlight %}
+
+**Создадим действие `BookAction` в модуле App:**
+
+{% highlight php %}
+<?php
+
+// src/App/src/Action/BooksAction.php
+
+namespace App\Action;
+
+use App\Service\BookService;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Zend\Diactoros\Response\HtmlResponse;
+use Psr\Http\Message\ServerRequestInterface;
+use Zend\Expressive\Template\TemplateRendererInterface;
+
+class BooksAction implements ServerMiddlewareInterface
+{
+    private const BOOKS_DIR = __DIR__ . '/../../../../data/books';
+    
+    /**
+     * @var BookService
+     */
+    private $bookService;
+    /**
+     * @var TemplateRendererInterface
+     */
+    private $tpl;
+
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    {
+        return new HtmlResponse($this->tpl->render('app::books', [
+            'books' => $this->bookService->getList(self::BOOKS_DIR),
+        ]));
+    }
+
+    public function __construct(BookService $bookService, TemplateRendererInterface $tpl)
+    {
+        $this->bookService = $bookService;
+        $this->tpl = $tpl;
+    }
+}
+{% endhighlight %}
+
+**Зарегистрируем наше действие:**
+
+{% highlight php %}
+<?php
+// src/App/src/ConfigProvider.php
+
+public function getDependencies()
+{
+    return [
+        ...
+    
+        'factories'  => [
+            ...
+            
+            Action\BooksAction::class => \Zend\ServiceManager\AbstractFactory\ReflectionBasedAbstractFactory::class,
+            
+            ...
+        ],
+        
+        ...
+    ];
+}
+{% endhighlight %}
+
+**Зарегистрируем маршрут для действия:**
+
+{% highlight php %}
+<?php
+// config/routes.php
+
+//...
+
+$app->get('/books', App\Action\BooksAction::class, 'books');
+{% endhighlight %}
+
+**Выполним переход по нашему только что добавленному маршруту http://localhost:8080/books :**
+
+![Список книг локальной ФС с сервисом на Zend Expressive](https://habrastorage.org/webt/ns/sc/nr/nsscnr_ilv7ysaircqxvww65jvo.png){:class="img-responsive"}
+
+([посмотреть увеличенную картинку][zend-screen]):
+
+**Готово!**
+
+**P.S.** Процесс можно ускороить используя [Command-Line Tool](https://docs.zendframework.com/zend-expressive/reference/cli-tooling/#expressive-command-line-tool).
+
 [directory-iterator]: http://php.net/manual/ru/class.directoryiterator.php
 [symfony-screen]: https://habrastorage.org/webt/fp/m8/pa/fpm8pas0bsrcqosmvzvoomvtryo.png
 [rails-screen]: https://habrastorage.org/webt/fl/kk/1i/flkk1ir-3vlqg1e6a6vxiphhcws.png
@@ -397,3 +553,5 @@ use yii\helpers\Html;
 [yii2filehelper]: http://www.yiiframework.com/doc-2.0/yii-helpers-filehelper.html
 [yii2diconstructor]: http://www.yiiframework.com/doc-2.0/guide-concept-di-container.html#constructor-injection
 [yii2dicontainer]: http://www.yiiframework.com/doc-2.0/guide-concept-di-container.html
+[rusty]: http://mihaly4.ru/
+[zend-screen]: https://habrastorage.org/webt/ns/sc/nr/nsscnr_ilv7ysaircqxvww65jvo.png
