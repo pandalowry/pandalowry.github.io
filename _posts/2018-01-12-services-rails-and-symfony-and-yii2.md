@@ -20,6 +20,8 @@ permalink: /services-rails-and-symfony-and-yii2-and-zend/
 
 Программисты на&nbsp;чистом PHP сразу&nbsp;же бросятся делать readdir и&nbsp;много чего другого в&nbsp;стиле &laquo;да&nbsp;я&nbsp;щас за&nbsp;пять минут&raquo;. Мы&nbsp;тоже не&nbsp;будем усложнять, но&nbsp;использовать мы&nbsp;будем нормальный подход&nbsp;&mdash; генератор [DirectoryIterator][directory-iterator].
 
+Хотя, как уже не единожды заметили симфонисты, лучшей практикой именно для Symfony будет использование специального компонента для нахождения файлов - [Finder](http://symfony.com/doc/current/components/finder.html)
+
 Итак, у&nbsp;нас есть Symfony&nbsp;3.3.9. Создадим-ка контроллер книг, какой собственно будет запускаться для отображения страницы
 
 {% highlight php %}
@@ -76,6 +78,15 @@ class DirectoryLister
         sort($files);
         return $files;
     }
+}
+{% endhighlight %}
+
+В случае же использования Finder, исполняемый код метода выглядел бы примерно так (подсказал [Кирилл Несмеянов](https://habrahabr.ru/users/SerafimArts/)):
+
+{% highlight php %}
+public function getFileList(): iterable
+{
+    yield from (new Finder())->files()->in($this->path);
 }
 {% endhighlight %}
 
